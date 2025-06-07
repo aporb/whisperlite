@@ -31,7 +31,7 @@
 ### Quick Start
 
 ```bash
-git clone https://github.com/<YOUR_USERNAME>/whisperlite.git
+git clone https://github.com/aporb/whisperlite.git
 cd whisperlite
 pip install -r requirements.txt
 python src/main.py
