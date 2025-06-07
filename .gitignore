@@ -1,0 +1,14 @@
+**pycache**/
+\*.pyc
+\*.pyo
+\*.pyd
+models/
+\*.bin
+\*.wav
+\*.flac
+\*.mp3
+.DS\_Store
+.env
+dist/
+build/
+\*.egg-info
