@@ -1,95 +1,94 @@
 # WhisperLite
 
-**A lightweight, open-source, cross-platform voice transcription tool that transcribes speech in real-time—100% local, private, and portable.**
+**A lightweight, open-source, cross-platform voice transcription tool that provides real-time, local transcription—100% private and portable.**
 
 ## 🚀 Overview
 
-- **Zero-cloud:** All processing on your device.
-- **Live transcription:** See your words as you speak, in a floating overlay window.
-- **Cross-platform:** Windows, macOS, Linux.
-- **Simple output:** When you stop, get a `.txt` file in your Downloads folder, named by username and timestamp.
+- **Zero-cloud:** All processing happens on your device.  
+- **Live transcription:** Speak and see your words in real time.  
+- **Cross-platform:** Windows, macOS, Linux support.  
+- **Simple output:** On stop, get a `.txt` transcript saved to your Downloads folder, timestamped and user-named.
 
 ---
 
-## 🔥 Features
+## 🔥 Key Features
 
-- Real-time, rolling transcription with minimal UI.
-- Local processing via [Whisper.cpp](https://github.com/ggerganov/whisper.cpp).
-- No internet connection or cloud dependencies.
-- Lightweight: runs on most modern machines.
+- Real-time, rolling transcription with minimal UI footprint  
+- Local processing via [Whisper.cpp](https://github.com/ggerganov/whisper.cpp)  
+- Cross-platform audio capture using `sounddevice`  
+- Buffered chunk management for low-latency transcription  
+- Modular design: `audio_capture.py`, `transcriber.py`, `display.py`, `output_writer.py`  
+- No internet, no telemetry, no cloud dependencies  
 
 ---
 
-## 🖥️ Installation
+## 🛠️ Installation
 
-### Requirements
+### Prerequisites
 
-- Python 3.10+
-- [Whisper.cpp model file](https://huggingface.co/ggerganov/whisper.cpp/tree/main) (e.g. `ggml-tiny.en.bin`)
-- `pip install -r requirements.txt`
+- Python 3.10+  
+- [Whisper.cpp model file](https://huggingface.co/ggerganov/whisper.cpp/tree/main) (e.g. `ggml-tiny.en.bin`) placed into `models/`  
+- System audio device (mic) with drivers installed  
 
-### Quick Start
+### Setup
 
 ```bash
 git clone https://github.com/aporb/whisperlite.git
 cd whisperlite
 pip install -r requirements.txt
-python src/main.py
+````
+
+---
+
+## 🖥️ Quick Start
+
+```bash
+python src/main.py --model models/ggml-tiny.en.bin
 ```
 
-### Platform Packaging
-
-See [docs/BUILD\_INSTALL.md](docs/BUILD_INSTALL.md) for instructions on creating platform-specific executables.
-
----
-
-## 📁 Output
-
-* Files saved to `~/Downloads/` or equivalent, as:
-
-  ```
-  <username>_YYYYMMDD_HHMM.txt
-  ```
+* Captures live audio in 1–2 s chunks
+* Sends chunks to `whisper.cpp` for inference
+* Buffers transcript in memory, then saves as `<username>_YYYYMMDD_HHMM.txt` in Downloads when complete
 
 ---
 
-## 💻 Repo Structure
+## 📁 Project Structure
 
 ```
-src/       # App source code
-models/    # Whisper model files (.bin)
-tests/     # Unit and integration tests
-docs/      # All specifications and architecture docs
+src/
+  audio_capture.py     # real-time mic capture
+  transcriber.py       # whisper.cpp integration
+  display.py           # optional overlay UI
+  output_writer.py     # final .txt export
+  main.py              # orchestrates the pipeline
+models/                # Whisper.cpp model files (.bin)
+chunks/                # auto-generated .wav slices
+tests/                 # unit & integration tests
+docs/                  # detailed design & usage docs
 ```
 
 ---
 
-## 📚 Documentation
+## 🧪 Testing
 
-* [Product Requirements](docs/PRODUCT_REQUIREMENTS.md)
-* [Architecture](docs/ARCHITECTURE.md)
-* [Functional Specification](docs/FUNCTIONAL_SPEC.md)
-* [Platform Matrix](docs/PLATFORM_MATRIX.md)
-* [Security & Privacy](docs/SECURITY_PRIVACY.md)
-* [Build & Install](docs/BUILD_INSTALL.md)
-* [Development Setup](docs/DEV_SETUP.md)
-* [Test Plan](docs/TEST_PLAN.md)
+* Unit tests: `pytest tests/unit/`
+* Integration tests (record → transcribe → save): `pytest tests/integration/`
+* Edge cases: no mic, I/O errors, long processing times
 
 ---
 
-## 🛡️ License
+## 📦 Packaging & Distribution
 
-MIT License (see [LICENSE](LICENSE))
+See [docs/BUILD\_INSTALL.md](docs/BUILD_INSTALL.md) for platform-specific packaging via PyInstaller, py2app, or AppImage.
 
 ---
 
 ## 🤝 Contributing
 
-See [docs/DEV\_SETUP.md](docs/DEV_SETUP.md) for onboarding, coding standards, and how to help!
+Please see [docs/DEV\_SETUP.md](docs/DEV_SETUP.md) for setup, coding standards, and pull request guidelines.
 
 ---
 
-## 🙏 Acknowledgements
+## 🛡️ License
 
-* [Whisper.cpp](https://github.com/ggerganov/whisper.cpp)
-* OpenAI for the Whisper model
+MIT License — see [LICENSE](LICENSE)
