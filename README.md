@@ -34,15 +34,15 @@ This tracks progress across Epics and Tasks. Each links to a GitHub Issue for co
 - [ ] [Package for Linux with AppImage](https://github.com/aporb/whisperlite/issues/16)
 
 #### 🧪 [Epic: Test Suite & Error Handling #4](https://github.com/aporb/whisperlite/issues/4)
-- [x] [Add unit tests for audio_capture.py](https://github.com/aporb/whisperlite/issues/17)
-- [x] [Add integration test: record → transcribe → save](https://github.com/aporb/whisperlite/issues/18)
+- [ ] [Add unit tests for audio_capture.py](https://github.com/aporb/whisperlite/issues/17)
+- [ ] [Add integration test: record → transcribe → save](https://github.com/aporb/whisperlite/issues/18)
 - [ ] [Handle mic permission and device not found](https://github.com/aporb/whisperlite/issues/19)
 - [ ] [Validate output file permissions and errors](https://github.com/aporb/whisperlite/issues/20)
 
 #### 🧭 [Epic: Contributor Onboarding and Docs #5](https://github.com/aporb/whisperlite/issues/5)
-- [x] [Finalize DEV_SETUP.md](https://github.com/aporb/whisperlite/issues/21)
-- [x] [Link all architecture docs from README](https://github.com/aporb/whisperlite/issues/22)
-- [x] [Add issue templates and contributing guide](https://github.com/aporb/whisperlite/issues/23)
+- [ ] [Finalize DEV_SETUP.md](https://github.com/aporb/whisperlite/issues/21)
+- [ ] [Link all architecture docs from README](https://github.com/aporb/whisperlite/issues/22)
+- [ ] [Add issue templates and contributing guide](https://github.com/aporb/whisperlite/issues/23)
 
 ---
 
