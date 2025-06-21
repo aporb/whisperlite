@@ -1,5 +1,5 @@
 import pytest
 
-def test\_output\_writer\_stub():
-\# TODO: Implement unit tests for output\_writer module
-assert True
+def test_output_writer_stub():
+    # TODO: Implement unit tests for output_writer module
+    assert True

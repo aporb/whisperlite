@@ -86,6 +86,8 @@ src/
   ├── display.py           # optional UI
   ├── output_writer.py     # save transcript
   └── main.py              # orchestrates pipeline
+rust/
+  src/main.rs         # cpal-based core engine
 docs/
   ├── ARCHITECTURE.md
   ├── DEV_SETUP.md
@@ -104,6 +106,8 @@ tests/
 
 ```bash
 make test
+
+cargo test --manifest-path rust/Cargo.toml
 ```
 
 * Unit coverage: audio slicing, whisper subprocess

@@ -1,5 +1,5 @@
 import pytest
 
-def test\_audio\_capture\_initialization():
-\# TODO: Implement unit tests for audio\_capture module
-assert True
+def test_audio_capture_initialization():
+    # TODO: Implement unit tests for audio_capture module
+    assert True
