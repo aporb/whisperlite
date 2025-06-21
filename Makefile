@@ -1,10 +1,9 @@
 run:
-\tpython src/main.py
+	python src/main.py
 
 test:
-\tpytest tests/
+	pytest tests/
 
 build:
-\t# Insert packaging commands here (e.g., PyInstaller, py2app, etc.)
-\techo "Packaging commands to be added."
-
+	# Insert packaging commands here (e.g., PyInstaller, py2app, etc.)
+	echo "Packaging commands to be added."
