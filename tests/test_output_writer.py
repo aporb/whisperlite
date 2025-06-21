@@ -15,3 +15,6 @@ def test_save_transcript(tmp_path):
         contents = f.read()
     assert "WhisperLite Transcript" in contents
     assert "hello" in contents
+def test_output_writer_stub():
+    # TODO: Implement unit tests for output_writer module
+    assert True
