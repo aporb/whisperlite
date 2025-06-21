@@ -14,7 +14,12 @@ import queue
 import logging
 import time
 import wave
-import sounddevice as sd
+try:
+    import sounddevice as sd
+except Exception as exc:  # ModuleImport or portaudio missing
+    sd = None  # type: ignore
+    import warnings
+    warnings.warn(f"sounddevice unavailable: {exc}")
 
 class AudioCapture:
     """
@@ -62,9 +67,14 @@ class AudioCapture:
 
     def _list_default_input_device(self):
         """Detect and log the default microphone info."""
+        if sd is None:
+            self.logger.error("sounddevice not available; skipping device query")
+            return False
         try:
             self.device_info = sd.query_devices(kind='input')
-            self.logger.info(f"Using input device: {self.device_info['name']} (SR {self.device_info['default_samplerate']:.0f}Hz)")
+            self.logger.info(
+                f"Using input device: {self.device_info['name']} (SR {self.device_info['default_samplerate']:.0f}Hz)"
+            )
             return True
         except Exception as e:
             self.logger.error(f"No default input device found: {e}")
@@ -108,6 +118,9 @@ class AudioCapture:
 
     def start(self):
         """Start capturing audio, spawn sounddevice stream."""
+        if sd is None:
+            self.logger.error("Audio capture unavailable: sounddevice missing")
+            return
         if not self._list_default_input_device():
             self.logger.error("Audio capture aborted: no input device.")
             return
