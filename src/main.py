@@ -60,10 +60,13 @@ def main() -> None:
 
     audio.stop()
     worker.join(timeout=1)
+    display.signal_stop()
 
     downloads = os.path.join(os.path.expanduser("~"), "Downloads")
     username = getpass.getuser()
-    path = save_transcript(buffer.full_text(), username, datetime.now(), downloads)
+    full_text = buffer.full_text()
+    path = save_transcript(full_text, username, datetime.now(), downloads)
+    buffer.clear()
     print(f"Transcript saved to {path}")
 
 

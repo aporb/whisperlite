@@ -37,7 +37,7 @@ class DisplayWindow:
         bottom = tk.Frame(self.root, bg="black")
         bottom.pack(fill="x")
         self.status_canvas = tk.Canvas(bottom, width=12, height=12, highlightthickness=0, bg="black")
-        self.status_indicator = self.status_canvas.create_oval(2, 2, 10, 10, fill="green")
+        self.status_indicator = self.status_canvas.create_oval(2, 2, 10, 10, fill="red")
         self.status_canvas.pack(side="left", padx=4, pady=4)
         self.stop_button = tk.Button(bottom, text="Stop", command=self.stop)
         self.stop_button.pack(side="right", padx=4, pady=4)
@@ -47,6 +47,11 @@ class DisplayWindow:
     def set_buffer(self, buffer: TranscriptBuffer) -> None:
         """Assign a :class:`TranscriptBuffer` to display."""
         self.buffer = buffer
+
+    def set_active(self, active: bool) -> None:
+        """Update the status indicator color."""
+        color = "red" if active else "gray"
+        self.status_canvas.itemconfig(self.status_indicator, fill=color)
 
     def start(self) -> None:
         """Begin periodic updates and enter the Tk main loop."""
@@ -62,6 +67,11 @@ class DisplayWindow:
 
     def stop(self) -> None:
         """Invoke stop callback and close the window."""
+        self.set_active(False)
         self.on_stop()
         self.root.quit()
         self.root.destroy()
+
+    def signal_stop(self) -> None:
+        """Thread-safe request to stop the window."""
+        self.root.after(0, self.stop)

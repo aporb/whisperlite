@@ -23,10 +23,10 @@ This tracks progress across Epics and Tasks. Each links to a GitHub Issue for co
 - [x] [Save final .txt transcript to Downloads](https://github.com/aporb/whisperlite/issues/9)
 
 #### 🖥️ [Epic: Live Overlay Display #2](https://github.com/aporb/whisperlite/issues/2)
-- [ ] [Build floating overlay using Tkinter or Tauri](https://github.com/aporb/whisperlite/issues/10)
-- [ ] [Connect live transcript feed to display](https://github.com/aporb/whisperlite/issues/11)
-- [ ] [Add UI controls: Stop button, status light](https://github.com/aporb/whisperlite/issues/12)
-- [ ] [Implement graceful exit and buffer flush](https://github.com/aporb/whisperlite/issues/13)
+- [x] [Build floating overlay using Tkinter or Tauri](https://github.com/aporb/whisperlite/issues/10)
+- [x] [Connect live transcript feed to display](https://github.com/aporb/whisperlite/issues/11)
+- [x] [Add UI controls: Stop button, status light](https://github.com/aporb/whisperlite/issues/12)
+- [x] [Implement graceful exit and buffer flush](https://github.com/aporb/whisperlite/issues/13)
 
 #### 📦 [Epic: Cross-Platform Packaging #3](https://github.com/aporb/whisperlite/issues/3)
 - [ ] [Package for Windows with PyInstaller](https://github.com/aporb/whisperlite/issues/14)
