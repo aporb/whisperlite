@@ -1,5 +1,9 @@
-import pytest
+import importlib
+import sys
+from pathlib import Path
 
-def test\_transcriber\_stub():
-\# TODO: Implement unit tests for transcriber module
-assert True
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+
+
+def test_transcriber_importable():
+    assert importlib.import_module("transcriber")

@@ -19,8 +19,8 @@ This tracks progress across Epics and Tasks. Each links to a GitHub Issue for co
 #### 🎯 [Epic: MVP Core Transcription Engine #1](https://github.com/aporb/whisperlite/issues/1)
 - [x] [Implement audio stream capture via sounddevice](https://github.com/aporb/whisperlite/issues/6)
 - [x] [Integrate whisper.cpp transcription of audio chunks](https://github.com/aporb/whisperlite/issues/7)
-- [ ] [Create transcript buffer and update loop](https://github.com/aporb/whisperlite/issues/8)
-- [ ] [Save final .txt transcript to Downloads](https://github.com/aporb/whisperlite/issues/9)
+- [x] [Create transcript buffer and update loop](https://github.com/aporb/whisperlite/issues/8)
+- [x] [Save final .txt transcript to Downloads](https://github.com/aporb/whisperlite/issues/9)
 
 #### 🖥️ [Epic: Live Overlay Display #2](https://github.com/aporb/whisperlite/issues/2)
 - [ ] [Build floating overlay using Tkinter or Tauri](https://github.com/aporb/whisperlite/issues/10)
@@ -83,9 +83,12 @@ audio_capture.py  →  transcriber.py  →  display.py
 src/
   ├── audio_capture.py     # mic input, 1–2s wav slices
   ├── transcriber.py       # whisper.cpp subprocess wrapper
+  ├── transcript_buffer.py # rolling transcript store
   ├── display.py           # optional UI
   ├── output_writer.py     # save transcript
   └── main.py              # orchestrates pipeline
+rust/
+  src/main.rs         # cpal-based core engine
 docs/
   ├── ARCHITECTURE.md
   ├── DEV_SETUP.md
@@ -104,6 +107,8 @@ tests/
 
 ```bash
 make test
+
+cargo test --manifest-path rust/Cargo.toml
 ```
 
 * Unit coverage: audio slicing, whisper subprocess
