@@ -1,116 +1,188 @@
-# Testing Strategy — WhisperLite
+# WhisperLite Testing Guide
 
-WhisperLite employs a multi-layered testing strategy to ensure reliability, correctness, and a smooth user experience. The strategy includes unit tests for individual components, integration tests for the end-to-end workflow, and manual tests for user interface and system-level interactions.
+This document outlines the testing strategy for WhisperLite, covering unit tests for Python modules, integration tests for the CLI, and general guidelines for adding new tests.
 
-## 🧪 Test Coverage
+## 1. Testing Philosophy
 
-Testing is focused on the most critical and complex parts of the application:
+WhisperLite aims for a robust testing suite to ensure reliability, prevent regressions, and facilitate future development. Given its hybrid architecture, testing focuses on:
+-   **Unit Tests**: Verifying the correctness of individual Python modules and functions in isolation.
+-   **Integration Tests**: Ensuring that different components (e.g., CLI arguments, Python modules) work correctly together.
+-   **End-to-End Tests**: (Future consideration) Validating the entire application flow, including the Rust-Python IPC and UI interactions.
 
--   **Python Engine**: Core transcription logic, audio data handling, and output formatting.
--   **Rust Core**: State management, audio capture, and the Python bridge.
--   **Frontend**: UI-to-backend communication and state synchronization.
+## 2. Python Unit Tests
 
-### 1. Unit Tests
+Python unit tests are located in the `tests/` directory and are written using the `pytest` framework.
 
-Unit tests are designed to validate the functionality of individual modules in isolation.
+### 2.1. Running Python Tests
 
--   **Location**: `tests/`
--   **Framework**: `pytest` for the Python engine.
--   **Execution**: `pytest tests/`
+To run all Python unit tests, navigate to the project root and execute:
 
-**Python Unit Test Examples (`tests/test_*.py`):**
+```bash
+pytest
+```
 
--   `test_audio_capture.py`: Mocks the microphone input and verifies that the `AudioCapture` class correctly chunks and queues audio data.
--   `test_transcriber.py`: Uses a mock `whisper.cpp` model to ensure the `Transcriber` class correctly processes audio data and returns the expected text output.
--   `test_output_writer.py`: Verifies that the `OutputWriter` class generates correctly formatted filenames and writes the transcript to the specified directory.
--   `test_ui_controller.py`: Tests the logic for updating the UI state and handling user commands.
+To run tests for a specific module (e.g., `test_transcriber.py`):
 
-### 2. Integration Tests
+```bash
+pytest tests/test_transcriber.py
+```
 
-Integration tests validate the entire workflow, from audio input to the final text output.
+### 2.2. Test Structure
 
--   **Location**: `rust/tests/`
--   **Framework**: `cargo test` for the Rust core.
--   **Execution**: `cargo test --manifest-path rust/Cargo.toml`
+Each Python module in `src/` typically has a corresponding test file in `tests/` (e.g., `src/transcriber.py` is tested by `tests/test_transcriber.py`).
 
-**Rust Integration Test Example (`rust/tests/basic.rs`):**
+Tests often use `unittest.mock` or `pytest` fixtures to mock external dependencies (e.g., `subprocess` calls for `whisper.cpp`, `sounddevice` for audio capture) to ensure tests are fast and isolated.
 
--   **`test_end_to_end_transcription`**: This test simulates a full transcription session:
-    1.  Starts the Rust application.
-    2.  Spawns the Python subprocess.
-    3.  Sends a pre-recorded audio file (e.g., `tests/fixtures/test_audio.wav`) to the Python process's `stdin`.
-    4.  Polls the `get_transcript` command to retrieve the transcribed text.
-    5.  Asserts that the returned transcript matches the expected output.
-    6.  Invokes the `save_transcript` command and verifies that the output file is created with the correct content.
+### 2.3. Adding New Python Unit Tests
 
-### 3. Manual Testing
+1.  Create a new file `tests/test_your_module.py` (if one doesn't exist) for the module you want to test.
+2.  Import `pytest` and the module/functions you intend to test.
+3.  Write test functions, typically prefixed with `test_`, using `assert` statements for assertions.
+4.  Use `pytest` fixtures for setup/teardown or to provide test data.
+5.  If mocking external calls (e.g., `subprocess.run`), use `mocker` fixture provided by `pytest-mock`.
 
-Manual testing is essential for validating the user experience and system-level interactions that are difficult to automate.
+**Example (`tests/test_transcriber.py` excerpt):**
 
--   **UI/UX**: Verifying the appearance and behavior of the floating overlay window, including:
-    -   Dark theme and glassmorphism effects.
-    -   Smooth animations for state transitions.
-    -   Window dragging, resizing, and always-on-top behavior.
--   **System Integration**: Testing on different operating systems (Windows, macOS, Linux) to ensure:
-    -   Correct microphone permissions handling.
-    -   Proper installation and uninstallation.
-    -   Compatibility with different hardware configurations.
--   **Edge Cases**: Manually testing for unexpected scenarios, such as:
-    -   No microphone connected.
-    -   No write permissions for the `Downloads` directory.
-    -   Corrupted or missing `whisper.cpp` model file.
+```python
+import pytest
+import subprocess
+from unittest.mock import MagicMock, patch
+from transcriber import WhisperTranscriber
 
-## ➕ How to Add a New Test
+# Mock shutil.which to ensure 'main' or 'whisper' is found
+@pytest.fixture(autouse=True)
+def mock_shutil_which(mocker):
+    mocker.patch('shutil.which', return_value='/usr/local/bin/main')
 
-### Adding a Python Unit Test
+def test_transcriber_initialization(tmp_path):
+    model_path = tmp_path / "test_model.bin"
+    model_path.touch()
+    transcriber = WhisperTranscriber(str(model_path))
+    assert transcriber.model_path == str(model_path)
+    assert transcriber.use_gpu == False
 
-1.  **Create a new test file**: If you are testing a new module (e.g., `src/new_module.py`), create a corresponding test file `tests/test_new_module.py`.
-2.  **Write the test function**: Follow the `pytest` conventions. Use fixtures to set up any necessary objects or mock data.
+def test_transcribe_chunk_success(mocker, tmp_path):
+    model_path = tmp_path / "test_model.bin"
+    model_path.touch()
+    transcriber = WhisperTranscriber(str(model_path))
 
-    ```python
-    # tests/test_new_module.py
-    import pytest
-    from src.new_module import MyClass
+    mock_process = MagicMock()
+    mock_process.communicate.return_value = ("WEBVTT\n\n00:00:00.000 --> 00:00:03.000\nHello world.\n", "")
+    mock_process.returncode = 0
 
-    @pytest.fixture
-    def my_class_instance():
-        """Returns an instance of MyClass for testing."""
-        return MyClass()
+    mocker.patch('subprocess.Popen', return_value=mock_process)
 
-    def test_my_function(my_class_instance):
-        """Tests the my_function method."""
-        # Given
-        input_data = "test"
+    chunk_path = tmp_path / "audio.wav"
+    chunk_path.touch()
 
-        # When
-        result = my_class_instance.my_function(input_data)
+    segments = transcriber.transcribe_chunk(str(chunk_path))
+    assert len(segments) == 1
+    assert segments[0]["text"] == "Hello world."
+    assert segments[0]["start"] == "00:00:00.000"
+```
 
-        # Then
-        assert result == "expected_output"
-    ```
+## 3. CLI Integration Tests
 
-3.  **Run the tests**: `pytest tests/`
+CLI integration tests are located in the `cli_tests/` directory and are shell scripts that execute the `main.py` in CLI mode and verify its output.
 
-### Adding a Rust Integration Test
+### 3.1. Running CLI Tests
 
-1.  **Create a new test file**: Add a new file in the `rust/tests/` directory (e.g., `rust/tests/new_feature_test.rs`).
-2.  **Write the test function**: Use the `#[test]` attribute.
+To run the CLI integration tests, execute the shell script directly:
 
-    ```rust
-    // rust/tests/new_feature_test.rs
+```bash
+bash cli_tests/test_cli_transcribe.sh
+```
+
+### 3.2. Test Structure
+
+These tests typically:
+1.  Set up environment variables (e.g., `MOCK_TRANSCRIPTION_OUTPUT` for predictable output).
+2.  Execute `python3 src/main.py` with various CLI arguments.
+3.  Check the standard output and standard error for expected messages.
+4.  Verify the creation and content of output files (e.g., `.txt`, `.json`, `.srt`).
+5.  Clean up any generated files.
+
+**Example (`cli_tests/test_cli_transcribe.sh` excerpt):**
+
+```bash
+#!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
+# Define colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# --- Test 1: Basic CLI transcription to TXT (mocked) ---
+echo -e "${GREEN}Running Test 1: Basic CLI transcription to TXT (mocked)${NC}"
+
+OUTPUT_FILE="test_output.txt"
+
+MOCK_TRANSCRIPTION_OUTPUT="true" python3 src/main.py --input "./test_audio.wav" --output "$OUTPUT_FILE" --format "txt"
+
+if [ -f "$OUTPUT_FILE" ]; then
+    echo -e "${GREEN}Test 1 Passed: Output file created.${NC}"
+    grep -q "This is a mock transcription. CLI mode is working." "$OUTPUT_FILE" && \
+    echo -e "${GREEN}Test 1 Passed: Content is correct.${NC}" || \
+    { echo -e "${RED}Test 1 Failed: Content is incorrect.${NC}"; exit 1; }
+else
+    echo -e "${RED}Test 1 Failed: Output file not created.${NC}"; exit 1;
+fi
+
+rm "$OUTPUT_FILE"
+
+echo -e "${GREEN}All CLI tests passed!${NC}"
+```
+
+## 4. Rust Tests
+
+Rust unit tests are located in `rust/tests/` and `rust/src/main.rs` (for `TranscriptBuffer` and `AppState` related logic). They are written using Rust's built-in testing framework.
+
+### 4.1. Running Rust Tests
+
+To run all Rust tests, navigate to the `rust/` directory and execute:
+
+```bash
+cargo test
+```
+
+### 4.2. Test Structure
+
+Rust tests are typically defined within `#[test]` functions. They can be in the same file as the code they are testing (within a `#[cfg(test)]` module) or in separate test files in the `tests/` directory.
+
+**Example (`rust/src/main.rs` excerpt):**
+
+```rust
+// ... (inside TranscriptBuffer impl)
+
+#[cfg(test)]
+mod tests {
     use super::*;
 
     #[test]
-    fn test_new_feature() {
-        // Setup: Initialize the application state
-        let app_state = setup_app_state();
-
-        // Action: Call the command or function to be tested
-        let result = my_new_feature(app_state);
-
-        // Assertion: Verify the result
-        assert!(result.is_ok());
+    fn test_transcript_buffer_push_and_get() {
+        let buffer = TranscriptBuffer::new();
+        buffer.push("Hello".to_string());
+        buffer.push("world".to_string());
+        assert_eq!(buffer.get_full_text(), "Hello world");
     }
-    ```
 
-3.  **Run the tests**: `cargo test --manifest-path rust/Cargo.toml`
+    #[test]
+    fn test_transcript_buffer_clear() {
+        let buffer = TranscriptBuffer::new();
+        buffer.push("Test".to_string());
+        buffer.clear();
+        assert_eq!(buffer.get_full_text(), "");
+    }
+}
+```
+
+## 5. General Testing Guidelines
+
+-   **Test Coverage**: Aim for high test coverage, especially for core logic and critical paths.
+-   **Readability**: Write clear, concise, and readable tests. Tests should be easy to understand and maintain.
+-   **Isolation**: Tests should be isolated and not depend on the state of other tests.
+-   **Edge Cases**: Consider and test edge cases (e.g., empty input, invalid paths, error conditions).
+-   **Performance**: While not the primary goal of unit tests, be mindful of test execution time. Avoid unnecessary I/O or long-running operations in unit tests.

@@ -1,17 +1,19 @@
 # WhisperLite
 
-**WhisperLite** is a lightweight, local-first, real-time transcription application that runs on your desktop. It uses the power of `whisper.cpp` to provide fast and accurate transcriptions without sending your data to the cloud.
+**WhisperLite** is a lightweight, local-first, real-time speech transcription application that runs on your desktop. It leverages a hybrid Rust-Python-Tauri architecture to provide fast, accurate, and private transcriptions without sending your data to the cloud.
 
-![WhisperLite UI](https://i.imgur.com/your-screenshot.png)
+![WhisperLite UI Screenshot](https://via.placeholder.com/800x450.png?text=WhisperLite+UI+Screenshot)
 
 ## ✨ Features
 
 -   **Real-Time Transcription**: Get a live feed of your speech as you talk.
--   **Local-First**: All processing is done on your device. No internet connection required.
--   **Cross-Platform**: Works on Windows, macOS, and Linux.
--   **Lightweight**: Minimal resource usage.
--   **Always-on-Top**: The overlay window stays on top of other applications for easy access.
--   **Save to File**: Save your transcripts to a `.txt` file with a single click.
+-   **Local-First & Private**: All processing is done on your device. No internet connection required, and no data leaves your machine.
+-   **Cross-Platform**: Works seamlessly on Windows, macOS, and Linux.
+-   **Lightweight**: Designed for minimal resource usage.
+-   **Always-on-Top Overlay**: The transcript display window stays on top of other applications for easy access.
+-   **Multiple Output Formats**: Save your transcripts to `.txt`, `.json`, or `.srt` files.
+-   **CLI/Headless Mode**: Transcribe audio files directly from the command line for scripting and automation.
+-   **Custom Model Support**: Use your preferred `whisper.cpp` model for transcription.
 
 ## 🚀 Getting Started
 
@@ -22,9 +24,9 @@ Download the latest version for your operating system from the [Releases](https:
 ### Usage (GUI)
 
 1.  Launch the application.
-2.  Click the "Start" button to begin transcription.
+2.  Click the "Start" button to begin real-time transcription.
 3.  Click the "Stop" button to end transcription.
-4.  Click the "Save" button to save the transcript to your `Downloads` folder.
+4.  Click the "Save" button to save the transcript to your `Downloads` folder in your chosen format.
 
 ### Usage (CLI/Headless Mode)
 
@@ -53,20 +55,20 @@ python src/main.py --input samples/hello.wav --model models/ggml-tiny.en.bin --o
 
 ## 🏗️ Architecture
 
-WhisperLite uses a hybrid architecture that combines a Rust core, a Python transcription engine, and a Tauri-based web frontend.
+WhisperLite employs a hybrid architecture combining Rust, Python, and Tauri. Rust handles high-performance audio capture and inter-process communication, Python manages `whisper.cpp` transcription, and Tauri provides the cross-platform GUI.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Tauri Application (Rust)                 │
-├─────────────────────────────────────────────────────────────┤
-│  Frontend (WebView - ui/)                                   │
-│  Backend (Rust Core)                                        │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  Python Transcription Engine                │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    A[Microphone Input] --> B(Rust Audio Capture - `cpal`);
+    B --> C{Raw Audio Bytes};
+    C --> D[Python Subprocess `src/main.py` (stdin)];
+    D --> E(Python `transcriber.py`);
+    E --> F{VTT Output};
+    F --> G(Python `transcriber.py` Parsing);
+    G --> H{Structured Text Segments};
+    H --> I[Rust TranscriptBuffer];
+    I --> J(Tauri Frontend - `get_transcript` command);
+    J --> K[UI Display];
 ```
 
 For a more detailed explanation, see the [Architecture](docs/ARCHITECTURE.md) document.
@@ -85,6 +87,10 @@ For a more detailed explanation, see the [Architecture](docs/ARCHITECTURE.md) do
 ## 🤝 Contributing
 
 Contributions are welcome! Please see the [Contributing Guide](docs/CONTRIBUTING.md) for more information.
+
+## 🧑‍💻 Contributors
+
+-   [Your Name/GitHub Handle Here](https://github.com/your-profile)
 
 ## 📄 License
 

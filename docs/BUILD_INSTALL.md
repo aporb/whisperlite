@@ -2,7 +2,7 @@
 
 This guide provides detailed instructions for building and installing WhisperLite from source on Windows, macOS, and Linux. For a simpler installation, pre-built installers are available on the [Releases](https://github.com/your-repo/whisperlite/releases) page.
 
-##  Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have the following dependencies installed on your system.
 
@@ -41,7 +41,7 @@ Node.js is required for the Tauri CLI and managing frontend dependencies.
     sudo apt-get install build-essential libwebkit2gtk-4.0-dev
     ```
 
-## 🚀 Automated Builds and Installation
+## Automated Builds and Installation
 
 WhisperLite now uses automated GitHub Actions workflows to build and package the application for Windows, macOS, and Linux. Pre-built installers for the latest releases can be found on the [Releases](https://github.com/your-repo/whisperlite/releases) page.
 
@@ -84,14 +84,6 @@ If you are a developer and wish to build WhisperLite from source, follow these s
     ```
 
     The compiled application will be located in `rust/target/release/`.
-
-### CLI/Headless Mode
-
-WhisperLite can also be run in a command-line interface (CLI) or headless mode for scripting and automation. To use it, execute the `main.py` script directly with the `--input` and `--output` flags:
-
-```bash
-python src/main.py --model models/ggml-tiny.en.bin --input audio.wav --output transcript.txt --format srt
-```
 
 ### CLI/Headless Mode
 
