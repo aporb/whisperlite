@@ -1,12 +1,20 @@
-import importlib
-import sys
-from pathlib import Path
+import pytest
+from unittest.mock import patch, MagicMock
+from src.transcriber import WhisperTranscriber
 
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+@patch('shutil.which', return_value='path/to/whisper')
+def test_transcriber_init_success(mock_which):
+    with patch('os.path.isfile', return_value=True):
+        transcriber = WhisperTranscriber(model_path='path/to/model.bin')
+        assert transcriber.model_path == 'path/to/model.bin'
 
+@patch('shutil.which', return_value=None)
+def test_transcriber_init_whisper_not_found(mock_which):
+    with pytest.raises(FileNotFoundError, match='whisper.cpp binary not found'):
+        WhisperTranscriber(model_path='path/to/model.bin')
 
-def test_transcriber_importable():
-    assert importlib.import_module("transcriber")
-def test_transcriber_stub():
-    # TODO: Implement unit tests for transcriber module
-    assert True
+@patch('shutil.which', return_value='path/to/whisper')
+def test_transcriber_init_model_not_found(mock_which):
+    with patch('os.path.isfile', return_value=False):
+        with pytest.raises(FileNotFoundError, match='Model file not found'):
+            WhisperTranscriber(model_path='path/to/model.bin')
