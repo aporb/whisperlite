@@ -18,6 +18,6 @@ def save_transcript(full_text: str, username: str, timestamp: datetime, output_d
         with open(path, "w", encoding="utf-8") as f:
             f.write(header)
             f.write(full_text)
-    except OSError as exc:
-        raise RuntimeError(f"Failed to write transcript: {exc}") from exc
+    except IOError as exc:
+        raise RuntimeError(f"Failed to write transcript to {path}: {exc}") from exc
     return path
