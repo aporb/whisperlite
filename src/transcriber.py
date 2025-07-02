@@ -33,10 +33,11 @@ class WhisperTranscriber:
             language: Language code to use (default: "en")
         """
         # Auto-detect binary if not provided
-        self.whisper_bin = whisper_bin or shutil.which("main") or shutil.which("whisper.cpp")
+        self.whisper_bin = whisper_bin or shutil.which("main") or shutil.which("whisper")
         if not self.whisper_bin:
-            logger.error("whisper.cpp binary not found in PATH. Please build or download it.")
-            raise FileNotFoundError("whisper.cpp binary not found in PATH.")
+            error_msg = "whisper.cpp binary not found. Please ensure it is in your PATH or specify its location."
+            logger.error(error_msg)
+            raise FileNotFoundError(error_msg)
 
         if not os.path.isfile(model_path):
             logger.error(f"Model file not found: {model_path}")
