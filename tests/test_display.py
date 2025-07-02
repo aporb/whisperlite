@@ -14,7 +14,7 @@ from display import DisplayWindow
 def test_display_update():
     controller = UIController()
     buffer = TranscriptBuffer()
-    buffer.append("hello")
+    buffer.append([{"start": "00:00:00.000", "end": "00:00:01.000", "text": "hello"}])
     # Create display but do not enter mainloop
     try:
         win = DisplayWindow(controller.request_stop)
