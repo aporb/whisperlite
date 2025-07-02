@@ -85,6 +85,32 @@ If you are a developer and wish to build WhisperLite from source, follow these s
 
     The compiled application will be located in `rust/target/release/`.
 
+### CLI/Headless Mode
+
+WhisperLite can also be run in a command-line interface (CLI) or headless mode for scripting and automation. To use it, execute the `main.py` script directly with the `--input` and `--output` flags:
+
+```bash
+python src/main.py --model models/ggml-tiny.en.bin --input audio.wav --output transcript.txt --format srt
+```
+
+### CLI/Headless Mode
+
+WhisperLite can also be run from the command-line interface (CLI) or headless mode for scripting and automation. To use it, execute the `main.py` script directly with the `--input` and `--output` flags:
+
+```bash
+python src/main.py --input samples/hello.wav --model models/ggml-tiny.en.bin --output output.json --format json
+```
+
+**Arguments:**
+
+-   `--input <path>`: Path to the audio file to transcribe (e.g., `.wav`, `.mp3`).
+-   `--output <path>`: (Optional) Path to save the transcript. If not provided, the transcript will be saved in your system's Downloads folder with a generated filename.
+-   `--format <txt|json|srt>`: (Optional) The output format for the transcript. Defaults to `txt`.
+    -   `txt`: Plain text.
+    -   `json`: JSON array of segments with start/end times and text.
+    -   `srt`: SubRip format with indexed blocks and time ranges.
+-   `--language <lang_code>`: (Optional) The language of the audio (e.g., `en` for English, `es` for Spanish). Defaults to `en`.
+
 ### Installation
 
 After a successful build, you can install WhisperLite as follows:
