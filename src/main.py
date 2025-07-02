@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import getpass
 import os
 import threading
@@ -16,10 +17,12 @@ from display import DisplayWindow
 from output_writer import save_transcript
 from ui_controller import UIController
 
-MODEL_PATH = os.environ.get("WHISPER_MODEL", "models/ggml-tiny.en.bin")
-
-
 def main() -> None:
+    parser = argparse.ArgumentParser(description="WhisperLite Transcription App")
+    parser.add_argument("--model", type=str, default="models/ggml-tiny.en.bin",
+                        help="Path to the Whisper model file (e.g., models/ggml-tiny.en.bin)")
+    args = parser.parse_args()
+
     buffer = TranscriptBuffer()
     ui = UIController()
 
@@ -35,7 +38,7 @@ def main() -> None:
         return
 
     try:
-        transcriber = WhisperTranscriber(MODEL_PATH)
+        transcriber = WhisperTranscriber(args.model)
     except FileNotFoundError as exc:
         print(exc)
         audio.stop()

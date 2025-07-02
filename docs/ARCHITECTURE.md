@@ -67,7 +67,7 @@ The data flows through the system in a clear, unidirectional path:
 -   **`transcriber.py`**: A focused module that contains the logic for loading the `whisper.cpp` model and running inference on audio data.
 -   **`transcript_buffer.py`**: A thread-safe buffer that accumulates transcribed text segments. This is crucial for maintaining the full context of the conversation.
 -   **`output_writer.py`**: Handles the formatting and saving of the final transcript to a `.txt` file, ensuring the correct filename and directory.
--   **`main.py`**: Serves as the entry point for the Python side, responsible for parsing commands from the Rust bridge and orchestrating the transcription pipeline.
+-   **`main.py`**: Serves as the entry point for the Python side, responsible for parsing command-line arguments (e.g., `--model`) and orchestrating the transcription pipeline.
 
 ### 3. Tauri Frontend (`ui/`)
 
@@ -76,9 +76,10 @@ The data flows through the system in a clear, unidirectional path:
 -   **`styles.css`**: Defines the modern, dark, "glassmorphism" aesthetic, including animations and responsive behavior.
 -   **`script.js`**: Contains all client-side logic, including:
     -   Invoking Tauri commands to interact with the backend.
-    -   Polling for transcript updates and rendering them to the screen.
+    -   Polling for transcript updates and rendering them to the screen with smooth transitions.
     -   Handling user interactions (button clicks, keyboard shortcuts).
     -   Managing UI state (e.g., displaying "Recording" or "Stopped" status).
+    -   Handling model path selection and persistence.
 
 ## 🛡️ Security & Sandboxing
 

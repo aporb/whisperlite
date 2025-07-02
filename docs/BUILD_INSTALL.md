@@ -41,7 +41,13 @@ Node.js is required for the Tauri CLI and managing frontend dependencies.
     sudo apt-get install build-essential libwebkit2gtk-4.0-dev
     ```
 
-## 🚀 Build Steps
+## 🚀 Automated Builds and Installation
+
+WhisperLite now uses automated GitHub Actions workflows to build and package the application for Windows, macOS, and Linux. Pre-built installers for the latest releases can be found on the [Releases](https://github.com/your-repo/whisperlite/releases) page.
+
+### Building from Source (for Developers)
+
+If you are a developer and wish to build WhisperLite from source, follow these steps:
 
 1.  **Clone the Repository**
 
@@ -50,51 +56,36 @@ Node.js is required for the Tauri CLI and managing frontend dependencies.
     cd whisperlite
     ```
 
-2.  **Download the Whisper.cpp Model**
+2.  **Install Prerequisites**
 
-    A pre-trained `whisper.cpp` model is required for transcription. The `build.sh` script will automatically download the `ggml-tiny.en.bin` model.
+    Ensure you have [Rust](https://www.rust-lang.org/tools/install), [Python 3.8+](https://www.python.org/downloads/), and [Node.js](https://nodejs.org/en/download/) installed. Also, install system-specific build tools as listed in the [Prerequisites](#-prerequisites) section above.
+
+3.  **Run the Build Script**
+
+    The `build.sh` script automates the setup of Python dependencies, downloads the Whisper model, and builds the Tauri application.
 
     ```bash
-    # This script will also install Python and frontend dependencies
     ./build.sh
     ```
 
-    Alternatively, you can download it manually:
+    Alternatively, you can manually install Python dependencies and build the Tauri app:
 
     ```bash
-    mkdir models
+    # Install Python dependencies
+    pip install -r requirements.txt
+
+    # Download Whisper model (if not already present)
+    mkdir -p models
     curl -L -o models/ggml-tiny.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin
-    ```
 
-3.  **Install Dependencies**
-
-    -   **Python Dependencies**
-
-        ```bash
-        pip install -r requirements.txt
-        ```
-
-    -   **Frontend Dependencies**
-
-        ```bash
-        cd ui
-        npm install
-        cd ..
-        ```
-
-4.  **Build the Application**
-
-    The final step is to build the Tauri application. This will compile the Rust core, bundle the Python engine, and package the frontend into a single executable.
-
-    ```bash
-    # Navigate to the Rust directory and build
+    # Build the Tauri application
     cd rust
     cargo tauri build
     ```
 
     The compiled application will be located in `rust/target/release/`.
 
-## 📦 Installation
+### Installation
 
 After a successful build, you can install WhisperLite as follows:
 

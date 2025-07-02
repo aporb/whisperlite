@@ -1,35 +1,73 @@
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
+use std::process::{Child, Command, Stdio};
+use std::io::{BufReader, BufRead, Write};
 
 use anyhow::Result;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use parking_lot::RwLock;
+use tauri::{State, Manager};
 
 #[cfg(feature = "ffiwrapper")]
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext};
 
 /// Holds text fragments from transcriber
-struct TranscriptBuffer {
+pub struct TranscriptBuffer {
     inner: RwLock<Vec<String>>,
 }
 
 impl TranscriptBuffer {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             inner: RwLock::new(Vec::new()),
         }
     }
 
-    fn push(&self, text: String) {
+    pub fn push(&self, text: String) {
         self.inner.write().push(text);
     }
 
-    fn get_full_text(&self) -> String {
+    pub fn get_full_text(&self) -> String {
         self.inner.read().join(" ")
     }
+
+    pub fn clear(&self) {
+        self.inner.write().clear();
+    }
 }
+
+pub struct AppState {
+    transcript_buffer: Arc<TranscriptBuffer>,
+    is_recording: Arc<RwLock<bool>>,
+    audio_sender: Arc<RwLock<Option<Sender<Vec<i16>>>>>, // Channel to send audio chunks
+    stream_handle: Arc<RwLock<Option<cpal::Stream>>>,
+    python_process: Arc<RwLock<Option<Child>>>,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self {
+            transcript_buffer: Arc::new(TranscriptBuffer::new()),
+            is_recording: Arc::new(RwLock::new(false)),
+            audio_sender: Arc::new(RwLock::new(None)),
+            stream_handle: Arc::new(RwLock::new(None)),
+            python_process: Arc::new(RwLock::new(None)),
+        }
+    }
+}
+
+#[derive(serde::Serialize)]
+pub struct CommandResponse {
+    success: bool,
+    message: Option<String>,
+    transcript: Option<String>,
+    path: Option<String>,
+    error: Option<String>,
+}
+
+
 
 /// Capture audio from microphone and send raw samples to a channel
 fn start_audio_capture(tx: Sender<Vec<i16>>, sample_rate: u32, channels: u16) -> Result<cpal::Stream> {
@@ -91,46 +129,147 @@ fn run_transcriber(rx: Receiver<Vec<i16>>, transcript: Arc<TranscriptBuffer>, mo
     Ok(())
 }
 
-fn write_transcript_periodically(transcript: Arc<TranscriptBuffer>, path: std::path::PathBuf) {
-    thread::spawn(move || loop {
-        thread::sleep(Duration::from_secs(5));
-        let text = transcript.get_full_text();
-        if let Err(e) = std::fs::write(&path, text) {
-            eprintln!("failed to write transcript: {}", e);
+#[tauri::command]
+async fn start_transcription(model_path: String, state: State<'_, AppState>) -> Result<CommandResponse, String> {
+    let mut is_recording = state.is_recording.write();
+    if *is_recording {
+        return Ok(CommandResponse { success: false, message: Some("Already recording".into()), transcript: None, path: None, error: None });
+    }
+
+    let (tx, rx) = unbounded();
+    *state.audio_sender.write() = Some(tx);
+
+    let transcript_clone = state.transcript_buffer.clone();
+    let model_path_clone = model_path.clone();
+
+    // Spawn Python subprocess
+    let python_process = Command::new("python3")
+        .arg("src/main.py")
+        .arg("--model")
+        .arg(model_path_clone)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn();
+
+    match python_process {
+        Ok(mut child) => {
+            let stdin = child.stdin.take().expect("Failed to open stdin");
+            let stdout = child.stdout.take().expect("Failed to open stdout");
+
+            // Thread to send audio to Python
+            let audio_rx = rx.clone();
+            thread::spawn(move || {
+                for chunk in audio_rx.iter() {
+                    // Convert i16 to bytes and send to Python stdin
+                    let bytes: Vec<u8> = chunk.iter().flat_map(|&s| s.to_le_bytes().to_vec()).collect();
+                    if let Err(e) = std::io::Write::write_all(&mut stdin.lock().unwrap(), &bytes) {
+                        eprintln!("Failed to write to python stdin: {}", e);
+                        break;
+                    }
+                }
+            });
+
+            // Thread to read transcript from Python
+            let transcript_buffer_clone = transcript_clone.clone();
+            thread::spawn(move || {
+                let reader = BufReader::new(stdout);
+                for line in reader.lines() {
+                    match line {
+                        Ok(text) => {
+                            transcript_buffer_clone.push(text);
+                        },
+                        Err(e) => {
+                            eprintln!("Failed to read from python stdout: {}", e);
+                            break;
+                        }
+                    }
+                }
+            });
+
+            *state.python_process.write().take() = Some(child);
+
+            // Start audio capture
+            match start_audio_capture(tx, 16_000, 1) {
+                Ok(stream) => {
+                    *state.stream_handle.write().take() = Some(stream);
+                    *is_recording = true;
+                    Ok(CommandResponse { success: true, message: Some("Recording started".into()), transcript: None, path: None, error: None })
+                },
+                Err(e) => {
+                    eprintln!("Failed to start audio capture: {}", e);
+                    // Kill python process if audio capture fails
+                    if let Some(mut p) = state.python_process.write().take() {
+                        let _ = p.kill();
+                    }
+                    Err(e.to_string())
+                }
+            }
+        },
+        Err(e) => {
+            eprintln!("Failed to spawn python process: {}", e);
+            Err(format!("Failed to start transcription: {}", e))
         }
-    });
+    }
+}
+
+#[tauri::command]
+async fn stop_transcription(state: State<'_, AppState>) -> Result<CommandResponse, String> {
+    let mut is_recording = state.is_recording.write();
+    if !*is_recording {
+        return Ok(CommandResponse { success: false, message: Some("Not recording".into()), transcript: None, path: None, error: None });
+    }
+
+    // Stop audio stream
+    if let Some(stream) = state.stream_handle.write().take() {
+        drop(stream);
+    }
+
+    // Kill Python process
+    if let Some(mut p) = state.python_process.write().take() {
+        let _ = p.kill();
+    }
+
+    *is_recording = false;
+    Ok(CommandResponse { success: true, message: Some("Recording stopped".into()), transcript: None, path: None, error: None })
+}
+
+#[tauri::command]
+async fn get_transcript(state: State<'_, AppState>) -> Result<CommandResponse, String> {
+    let transcript = state.transcript_buffer.get_full_text();
+    Ok(CommandResponse { success: true, message: None, transcript: Some(transcript), path: None, error: None })
+}
+
+#[tauri::command]
+async fn save_transcript(state: State<'_, AppState>) -> Result<CommandResponse, String> {
+    let transcript = state.transcript_buffer.get_full_text();
+    let downloads = dirs::download_dir().ok_or_else(|| "No downloads directory found".to_string())?;
+    let filename = format!("whisperlite_transcript_{}.txt", chrono::Local::now().format("%Y%m%d_%H%M%S"));
+    let path = downloads.join(filename);
+
+    match std::fs::write(&path, transcript) {
+        Ok(_) => Ok(CommandResponse { success: true, message: Some("Transcript saved".into()), transcript: None, path: Some(path.to_string_lossy().into_owned()), error: None }),
+        Err(e) => Err(format!("Failed to save transcript: {}", e)),
+    }
+}
+
+#[tauri::command]
+async fn clear_transcript(state: State<'_, AppState>) -> Result<CommandResponse, String> {
+    state.transcript_buffer.clear();
+    Ok(CommandResponse { success: true, message: Some("Transcript cleared".into()), transcript: None, path: None, error: None })
 }
 
 fn main() -> Result<()> {
-    let (tx, rx) = unbounded();
-    let transcript = Arc::new(TranscriptBuffer::new());
+    tauri::Builder::default()
+        .manage(AppState::default())
+        .invoke_handler(tauri::generate_handler![
+            start_transcription,
+            stop_transcription,
+            get_transcript,
+            save_transcript,
+            clear_transcript
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 
-    let downloads = dirs::download_dir().ok_or_else(|| anyhow::anyhow!("No downloads dir"))?;
-    let output_path = downloads.join("whisperlite_transcript.txt");
-    write_transcript_periodically(transcript.clone(), output_path);
-
-    let _stream = start_audio_capture(tx, 16_000, 1)?;
-
-    #[cfg(feature = "ffiwrapper")]
-    {
-        let transcript_clone = transcript.clone();
-        thread::spawn(move || {
-            if let Err(e) = run_transcriber(rx, transcript_clone, "models/ggml-tiny.en.bin") {
-                eprintln!("transcriber error: {e}");
-            }
-        });
-    }
-    #[cfg(not(feature = "ffiwrapper"))]
-    {
-        thread::spawn(move || {
-            for _ in rx.iter() {
-                // no-op transcriber stub
-            }
-        });
-    }
-
-    // Keep alive indefinitely
-    loop {
-        thread::sleep(Duration::from_secs(1));
-    }
+    Ok(())
 }

@@ -53,7 +53,7 @@ For a more detailed explanation, see the [Architecture](docs/ARCHITECTURE.md) do
 -   [x] Cross-platform support
 -   [x] Save transcript to file
 -   [x] Floating overlay window
--   [ ] Custom model selection
+-   [x] Custom model selection
 -   [ ] Multiple output formats (JSON, SRT)
 
 ## 🤝 Contributing

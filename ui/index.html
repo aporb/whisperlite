@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhisperLite</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with drag handle and controls -->
+        <div class="header" data-tauri-drag-region>
+            <div class="title">WhisperLite</div>
+            <div class="status-indicator" id="status-indicator">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">Ready</span>
+            </div>
+        </div>
+
+        <!-- Main transcript display area -->
+        <div class="transcript-container">
+            <div class="transcript-display" id="transcript-display">
+                <div class="placeholder-text">
+                    Click Start to begin transcription...
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Selection -->
+        <div class="model-selection">
+            <label for="model-path">Whisper Model:</label>
+            <input type="text" id="model-path" placeholder="Path to ggml-model.bin" readonly>
+            <button class="btn btn-icon-only" id="browse-model-btn" title="Browse for model">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10 4H4c-1.11 0-2 .9-2 2v12c0 1.09.9 2 2 2h16c1.09 0 2-.91 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Control buttons -->
+        <div class="controls">
+            <button class="btn btn-primary" id="start-btn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                Start
+            </button>
+            <button class="btn btn-secondary" id="stop-btn" disabled>
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="6" width="12" height="12"/>
+                </svg>
+                Stop
+            </button>
+            <button class="btn btn-tertiary" id="save-btn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17,21 17,13 7,13 7,21"/>
+                    <polyline points="7,3 7,8 15,8"/>
+                </svg>
+                Save
+            </button>
+            <button class="btn btn-danger" id="clear-btn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <polyline points="3,6 5,6 21,6"/>
+                    <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+                </svg>
+                Clear
+            </button>
+        </div>
+
+        <!-- Footer with resize handle -->
+        <div class="footer">
+            <div class="resize-handle"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

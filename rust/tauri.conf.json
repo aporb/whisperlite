@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.tauri.app/config/2.0.0",
+  "productName": "WhisperLite",
+  "version": "0.1.0",
+  "identifier": "com.whisperlite.app",
+  "build": {
+    "frontendDist": "../ui"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "WhisperLite",
+        "width": 400,
+        "height": 300,
+        "minWidth": 300,
+        "minHeight": 200,
+        "alwaysOnTop": true,
+        "decorations": true,
+        "transparent": false,
+        "x": 50,
+        "y": 50,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all"
+  },
+  "plugins": {}
+}
