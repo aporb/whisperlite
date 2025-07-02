@@ -240,15 +240,53 @@ async fn get_transcript(state: State<'_, AppState>) -> Result<CommandResponse, S
 }
 
 #[tauri::command]
-async fn save_transcript(state: State<'_, AppState>) -> Result<CommandResponse, String> {
-    let transcript = state.transcript_buffer.get_full_text();
-    let downloads = dirs::download_dir().ok_or_else(|| "No downloads directory found".to_string())?;
-    let filename = format!("whisperlite_transcript_{}.txt", chrono::Local::now().format("%Y%m%d_%H%M%S"));
-    let path = downloads.join(filename);
+async fn save_transcript(file_format: String, state: State<'_, AppState>) -> Result<CommandResponse, String> {
+    let segments = state.transcript_buffer.get_segments();
+    let segments_json = serde_json::to_string(&segments)
+        .map_err(|e| format!("Failed to serialize segments: {}", e))?;
 
-    match std::fs::write(&path, transcript) {
-        Ok(_) => Ok(CommandResponse { success: true, message: Some("Transcript saved".into()), transcript: None, path: Some(path.to_string_lossy().into_owned()), error: None }),
-        Err(e) => Err(format!("Failed to save transcript: {}", e)),
+    let downloads = dirs::download_dir().ok_or_else(|| "No downloads directory found".to_string())?;
+    let output_dir_str = downloads.to_string_lossy().into_owned();
+
+    let python_process = Command::new("python3")
+        .arg("src/main.py")
+        .arg("--save-transcript")
+        .arg("--format")
+        .arg(file_format)
+        .arg("--output-dir")
+        .arg(output_dir_str)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn();
+
+    match python_process {
+        Ok(mut child) => {
+            let mut stdin = child.stdin.take().expect("Failed to open stdin");
+            let stdout = child.stdout.take().expect("Failed to open stdout");
+
+            // Write segments JSON to Python stdin
+            if let Err(e) = stdin.write_all(segments_json.as_bytes()) {
+                eprintln!("Failed to write segments to python stdin: {}", e);
+                let _ = child.kill();
+                return Err(format!("Failed to save transcript: {}", e));
+            }
+            drop(stdin); // Close stdin to signal EOF to Python
+
+            let output = child.wait_with_output().map_err(|e| format!("Failed to wait for python process: {}", e))?;
+
+            if output.status.success() {
+                let path_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                Ok(CommandResponse { success: true, message: Some("Transcript saved".into()), transcript: None, path: Some(path_str), error: None })
+            } else {
+                let stderr_str = String::from_utf8_lossy(&output.stderr);
+                eprintln!("Python save script failed: {}", stderr_str);
+                Err(format!("Failed to save transcript: {}", stderr_str))
+            }
+        },
+        Err(e) => {
+            eprintln!("Failed to spawn python save process: {}", e);
+            Err(format!("Failed to save transcript: {}", e))
+        }
     }
 }
 

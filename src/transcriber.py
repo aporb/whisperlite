@@ -69,7 +69,7 @@ class WhisperTranscriber:
             "-m", self.model_path,
             "-f", chunk_path,
             "--language", self.language,
-            "--output-txt",  # output plain text file (stdout will also be captured)
+            "--output-vtt",  # output VTT file (stdout will also be captured)
             "--print-colors", "false"
         ]
         if self.use_gpu:
@@ -91,37 +91,54 @@ class WhisperTranscriber:
             transcript_lines = []
             err_lines = []
 
-            # Stream output in real-time
-            for line in process.stdout:
-                clean = line.strip()
-                if clean:
-                    transcript_lines.append(clean)
-                    logger.debug(f"Whisper output: {clean}")
+            # Read all stdout and stderr
+            stdout, stderr = process.communicate(timeout=timeout)
 
-            # Wait for process to finish
-            try:
-                process.wait(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                logger.error("whisper.cpp process timed out.")
-                return ""
+            if stderr:
+                for line in stderr.splitlines():
+                    logger.error(f"whisper.cpp stderr: {line.strip()}")
 
-            # Collect errors
-            for err in process.stderr:
-                err_clean = err.strip()
-                if err_clean:
-                    err_lines.append(err_clean)
-                    logger.error(f"whisper.cpp stderr: {err_clean}")
+            if not stdout:
+                logger.warning("No output from whisper.cpp for this chunk.")
+                return []
 
-            transcript = " ".join(transcript_lines).strip()
-            if not transcript:
-                logger.warning("No transcript returned for this chunk.")
+            # Parse VTT output
+            segments = []
+            lines = stdout.splitlines()
+            i = 0
+            while i < len(lines):
+                line = lines[i].strip()
+                if "-->" in line:
+                    try:
+                        time_str = line
+                        text_line = lines[i + 1].strip()
+                        
+                        start_time_str, end_time_str = time_str.split(" --> ")
+                        
+                        segments.append({
+                            "start": start_time_str,
+                            "end": end_time_str,
+                            "text": text_line
+                        })
+                        i += 1 # Skip text line
+                    except IndexError:
+                        logger.error(f"Malformed VTT output near: {line}")
+                    except ValueError:
+                        logger.error(f"Could not parse time string: {line}")
+                i += 1
+            
+            if not segments:
+                logger.warning("No segments parsed from VTT output.")
 
-            return transcript
+            return segments
 
+        except subprocess.TimeoutExpired:
+            process.kill()
+            logger.error("whisper.cpp process timed out.")
+            return []
         except Exception as ex:
-            logger.exception(f"Failed to invoke whisper.cpp: {ex}")
-            return ""
+            logger.exception(f"Failed to invoke whisper.cpp or parse output: {ex}")
+            return []
 
 # Example usage/test
 if __name__ == "__main__":

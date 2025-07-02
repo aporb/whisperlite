@@ -5,28 +5,36 @@ from __future__ import annotations
 import threading
 from collections import deque
 from datetime import datetime
-from typing import Deque, List
+from typing import Deque, List, Dict
 
 class TranscriptBuffer:
     """Thread-safe append-only transcript buffer."""
 
     def __init__(self, maxlen: int | None = None):
-        self._buffer: Deque[str] = deque(maxlen=maxlen)
+        self._buffer: Deque[Dict] = deque(maxlen=maxlen)
         self._lock = threading.RLock()
 
-    def append(self, text: str) -> None:
+    def append(self, segments: List[Dict]) -> None:
+        """Appends a list of new segments to the buffer."""
         with self._lock:
-            self._buffer.append(text)
+            self._buffer.extend(segments)
+
+    def get_segments(self) -> List[Dict]:
+        """Returns all stored segments."""
+        with self._lock:
+            return list(self._buffer)
 
     def full_text(self) -> str:
+        """Returns the full concatenated text from all segments."""
         with self._lock:
-            return "\n".join(self._buffer)
+            return " ".join([s["text"] for s in self._buffer])
 
-    def clear(self) -> List[str]:
+    def clear(self) -> List[Dict]:
+        """Clears the buffer and returns the cleared segments."""
         with self._lock:
-            lines = list(self._buffer)
+            segments = list(self._buffer)
             self._buffer.clear()
-            return lines
+            return segments
 
     def __len__(self) -> int:
         with self._lock:
