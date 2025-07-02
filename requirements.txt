@@ -1,3 +1,4 @@
 sounddevice             # cross-platform real-time audio capture
 numpy                   # numerical operations for audio buffering
 pytest                  # testing framework for unit & integration tests
+soundfile               # for reading and writing sound files
