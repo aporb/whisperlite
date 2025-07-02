@@ -22,6 +22,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # Models and Audio Data
+models/ # All model files and directories
+amyn_*.txt # Generated transcript files
 models/*.bin # Specific model files
 *.wav # Temporary audio files
 *.flac
