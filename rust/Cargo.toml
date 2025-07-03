@@ -17,3 +17,11 @@ parking_lot = "0.12"
 [features]
 default = []
 ffiwrapper = ["whisper-rs"]
+
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies.tauri]
+version = "1.5"
+features = ["shell-open", "process-all", "dialog-all", "fs-all", "path-all", "protocol-all", "window-all", "cli"]

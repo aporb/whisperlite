@@ -30,7 +30,24 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all"
+    "targets": "all",
+    "externalBin": [
+      "../venv/bin/python3"
+    ],
+    "resources": [
+      "../src",
+      "../models"
+    ],
+    "macOS": {
+      "signingIdentity": null, // Placeholder for Apple Developer ID signing identity
+      "entitlements": null, // Placeholder for entitlements file path
+      "exceptionDomain": null, // Placeholder for exception domain
+      "notarize": false // Set to true for notarization
+    },
+    "windows": {
+      "certificateThumbprint": null, // Placeholder for certificate thumbprint
+      "timestampUrl": null // Placeholder for timestamp server URL
+    }
   },
   "plugins": {}
 }
