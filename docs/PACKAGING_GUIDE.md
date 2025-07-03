@@ -37,10 +37,7 @@ The primary command for packaging is `cargo tauri build`. This command will comp
     pip install -r requirements.txt
     ```
 2.  **Ensure the Whisper model is downloaded**:
-    ```bash
-    mkdir -p models
-    curl -L -o models/ggml-tiny.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin
-    ```
+    # The application now supports in-app model download and management.
 3.  **Navigate to the `rust/` directory**:
     ```bash
     cd rust

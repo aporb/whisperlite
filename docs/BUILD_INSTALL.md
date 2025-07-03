@@ -75,8 +75,7 @@ If you are a developer and wish to build WhisperLite from source, follow these s
     pip install -r requirements.txt
 
     # Download Whisper model (if not already present)
-    mkdir -p models
-    curl -L -o models/ggml-tiny.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin
+    # The application now supports in-app model download and management.
 
     # Build the Tauri application
     cd rust

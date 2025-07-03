@@ -13,7 +13,7 @@
 -   **Always-on-Top Overlay**: The transcript display window stays on top of other applications for easy access.
 -   **Multiple Output Formats**: Save your transcripts to `.txt`, `.json`, or `.srt` files.
 -   **CLI/Headless Mode**: Transcribe audio files directly from the command line for scripting and automation.
--   **Custom Model Support**: Use your preferred `whisper.cpp` model for transcription.
+-   **In-app Model Management**: Easily select, download, and manage `whisper.cpp` models directly within the application.
 
 ## 🚀 Getting Started
 

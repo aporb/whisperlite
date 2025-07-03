@@ -30,8 +30,9 @@ graph TD
 2.  **In-Memory Transfer**: The audio data is sent directly to the Python subprocess via its `stdin`. It is never written to a temporary file on disk.
 3.  **Transcription**: The Python engine processes the in-memory audio data and generates the transcript.
 4.  **Transcript Buffer**: The transcribed text is stored in a secure, in-memory buffer within the Rust core.
-5.  **Temporary Files**: The only time a file is written to disk is when you explicitly save the transcript. These files are stored in your `Downloads` directory, and you have full control over them.
-6.  **Graceful Exit**: When you close the application, the in-memory audio and transcript buffers are immediately cleared. No data persists between sessions unless explicitly saved by the user.
+5.  **Model Storage**: Downloaded `whisper.cpp` models are stored locally in a designated application data directory (e.g., `~/.local/share/WhisperLite/models` on Linux, `~/Library/Application Support/WhisperLite/models` on macOS, `%APPDATA%\WhisperLite\models` on Windows). These models are never sent over the network.
+6.  **Temporary Files**: The only time a file is written to disk is when you explicitly save the transcript. These files are stored in your `Downloads` directory, and you have full control over them.
+7.  **Graceful Exit**: When you close the application, the in-memory audio and transcript buffers are immediately cleared. No data persists between sessions unless explicitly saved by the user.
 
 ## Permissions Model
 

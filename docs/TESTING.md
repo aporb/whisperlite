@@ -138,7 +138,7 @@ echo -e "${GREEN}All CLI tests passed!${NC}"
 
 ## 4. Rust Tests
 
-Rust unit tests are located in `rust/tests/` and `rust/src/main.rs` (for `TranscriptBuffer` and `AppState` related logic). They are written using Rust's built-in testing framework.
+Rust unit tests are located in `rust/tests/` and `rust/src/main.rs` (for `TranscriptBuffer` and `AppState` related logic). They are written using Rust's built-in testing framework. **Note: Rust tests are currently blocked due to a `javascriptcoregtk` dependency incompatibility.**
 
 ### 4.1. Running Rust Tests
 

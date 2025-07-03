@@ -21,7 +21,8 @@ The Rust component serves as the application's backend and handles critical low-
 -   **Audio Capture**: Utilizes the `cpal` library to interface with the system's audio devices, capturing raw audio samples from the default input microphone.
 -   **Process Management**: Spawns and manages the Python transcription subprocess, handling its `stdin` and `stdout` for inter-process communication.
 -   **State Management**: Maintains the application's core state, including recording status, audio sender channels, and the transcript buffer.
--   **Tauri Integration**: Exposes commands to the Tauri frontend (e.g., `start_transcription`, `stop_transcription`, `get_transcript`, `save_transcript`, `clear_transcript`).
+-   **Tauri Integration**: Exposes commands to the Tauri frontend (e.g., `start_transcription`, `stop_transcription`, `get_transcript`, `save_transcript`, `clear_transcript`, `list_models`, `download_model`, `delete_model`).
+-   **Model Management**: Handles listing, downloading, and deleting `whisper.cpp` model files.
 -   **Transcript Buffer**: Manages the `TranscriptBuffer` (implemented in Rust) which stores transcribed text segments.
 
 ### 2.2. Python Logic (`src/`)
