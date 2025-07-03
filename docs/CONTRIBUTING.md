@@ -92,15 +92,7 @@ To propose a new feature, please [open an issue](https://github.com/aporb/whispe
 
 ## Debugging the Hybrid Application
 
-Debugging a hybrid Rust-Python-Tauri application can be challenging. Here are some tips:
-
--   **Rust Debugging**: Use `rust-gdb` or `rust-lldb` for debugging the Rust core.
--   **Python Debugging**: Use `pdb` or an IDE's debugger (e.g., VS Code with Python extension) for Python scripts.
--   **Tauri Debugging**: Use your browser's developer tools to debug the webview (HTML/CSS/JS).
--   **Inter-process Communication (IPC)**:
-    -   Add extensive logging to both Rust and Python components to trace data flow and identify communication issues.
-    -   Temporarily redirect `stdout` and `stderr` of the Python subprocess to files for easier inspection.
-    -   Use tools like `strace` (Linux) or `dtrace` (macOS) to monitor system calls and process interactions.
+Debugging a hybrid Rust-Python-Tauri application can be challenging. For a detailed guide on debugging, please refer to the [Debugging Guide](DEBUGGING_GUIDE.md).
 
 ## Code of Conduct
 
