@@ -8,59 +8,78 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header with drag handle and controls -->
-        <div class="header" data-tauri-drag-region>
-            <div class="title">WhisperLite</div>
-            <div class="status-indicator" id="status-indicator">
+        <header class="header" data-tauri-drag-region>
+            <h1 class="title">WhisperLite</h1>
+            <div class="status-indicator" id="status-indicator" role="status" aria-live="polite">
                 <div class="status-dot" id="status-dot"></div>
                 <span id="status-text">Ready</span>
             </div>
-        </div>
+        </header>
 
-        <!-- Main transcript display area -->
-        <div class="transcript-container">
-            <div class="transcript-display" id="transcript-display">
-                <div class="placeholder-text">
+        <main class="transcript-container">
+            <div class="transcript-display" id="transcript-display" aria-live="polite" aria-atomic="false">
+                <p class="placeholder-text">
                     Click Start to begin transcription...
-                </div>
+                </p>
+            </div>
+        </main>
+
+        <!-- Model Selection and Management -->
+        <div class="model-management">
+            <div class="model-selection">
+                <label for="model-select">Whisper Model:</label>
+                <select id="model-select" aria-label="Select Whisper model">
+                    <option value="">Loading models...</option>
+                </select>
+                <button class="btn btn-icon-only" id="refresh-models-btn" title="Refresh model list" aria-label="Refresh model list">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.45.83.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="model-actions">
+                <button class="btn btn-secondary" id="download-model-btn" aria-label="Download selected model">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                    Download
+                </button>
+                <button class="btn btn-danger" id="delete-model-btn" aria-label="Delete selected model">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                    </svg>
+                    Delete
+                </button>
+            </div>
+            <div class="model-progress" style="display: none;">
+                <progress id="download-progress" value="0" max="100"></progress>
+                <span id="progress-text">0%</span>
             </div>
         </div>
 
-        <!-- Model Selection -->
-        <div class="model-selection">
-            <label for="model-path">Whisper Model:</label>
-            <input type="text" id="model-path" placeholder="Path to ggml-model.bin" readonly>
-            <button class="btn btn-icon-only" id="browse-model-btn" title="Browse for model">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M10 4H4c-1.11 0-2 .9-2 2v12c0 1.09.9 2 2 2h16c1.09 0 2-.91 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Control buttons -->
-        <div class="controls">
-            <button class="btn btn-primary" id="start-btn">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+        <div class="controls" role="group" aria-label="Transcription Controls">
+            <button class="btn btn-primary" id="start-btn" aria-label="Start Transcription">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M8 5v14l11-7z"/>
                 </svg>
                 Start
             </button>
-            <button class="btn btn-secondary" id="stop-btn" disabled>
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <button class="btn btn-secondary" id="stop-btn" disabled aria-label="Stop Transcription">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <rect x="6" y="6" width="12" height="12"/>
                 </svg>
                 Stop
             </button>
-            <button class="btn btn-tertiary" id="save-btn">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <button class="btn btn-tertiary" id="save-btn" aria-label="Save Transcript">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                     <polyline points="17,21 17,13 7,13 7,21"/>
                     <polyline points="7,3 7,8 15,8"/>
                 </svg>
                 Save
             </button>
-            <button class="btn btn-danger" id="clear-btn">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <button class="btn btn-danger" id="clear-btn" aria-label="Clear Transcript">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <polyline points="3,6 5,6 21,6"/>
                     <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
                 </svg>
@@ -68,10 +87,9 @@
             </button>
         </div>
 
-        <!-- Footer with resize handle -->
-        <div class="footer">
+        <footer class="footer">
             <div class="resize-handle"></div>
-        </div>
+        </footer>
     </div>
 
     <script src="script.js"></script>

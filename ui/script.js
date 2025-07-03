@@ -16,26 +16,22 @@ const clearBtn = document.getElementById('clear-btn');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 const transcriptDisplay = document.getElementById('transcript-display');
-const modelPathInput = document.getElementById('model-path');
-const browseModelBtn = document.getElementById('browse-model-btn');
+const modelSelect = document.getElementById('model-select');
+const refreshModelsBtn = document.getElementById('refresh-models-btn');
+const downloadModelBtn = document.getElementById('download-model-btn');
+const deleteModelBtn = document.getElementById('delete-model-btn');
+const downloadProgress = document.getElementById('download-progress');
+const progressText = document.getElementById('progress-text');
+const modelProgressDiv = document.querySelector('.model-progress');
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('WhisperLite UI initialized');
     
-    // Set up event listeners
     setupEventListeners();
-    
-    // Initialize window properties
     await initializeWindow();
+    await loadModels(); // Load models on startup
     
-    // Load saved model path
-    const savedModelPath = localStorage.getItem('whisperlite_model_path');
-    if (savedModelPath) {
-        modelPathInput.value = savedModelPath;
-    }
-    
-    // Update status
     updateStatus('ready', 'Ready');
 });
 
@@ -45,50 +41,142 @@ function setupEventListeners() {
     stopBtn.addEventListener('click', stopRecording);
     saveBtn.addEventListener('click', saveTranscript);
     clearBtn.addEventListener('click', clearTranscript);
-    browseModelBtn.addEventListener('click', browseForModel);
     
-    // Window event listeners
+    modelSelect.addEventListener('change', selectModel);
+    refreshModelsBtn.addEventListener('click', loadModels);
+    downloadModelBtn.addEventListener('click', downloadModel);
+    deleteModelBtn.addEventListener('click', deleteModel);
+    
     document.addEventListener('keydown', handleKeyboardShortcuts);
 }
 
-// Initialize window properties
-async function initializeWindow() {
+async function loadModels() {
     try {
-        // Set window to always on top
-        await appWindow.setAlwaysOnTop(true);
-        
-        // Set initial position (top-left corner with some margin)
-        await appWindow.setPosition({ x: 50, y: 50 });
-        
-        console.log('Window initialized successfully');
+        modelSelect.innerHTML = '<option value="">Loading models...</option>';
+        modelSelect.disabled = true;
+        refreshModelsBtn.disabled = true;
+        downloadModelBtn.disabled = true;
+        deleteModelBtn.disabled = true;
+
+        const models = await invoke('list_models');
+        modelSelect.innerHTML = '';
+        if (models.length === 0) {
+            modelSelect.innerHTML = '<option value="">No models found</option>';
+        } else {
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.path;
+                option.textContent = model.name;
+                modelSelect.appendChild(option);
+            });
+            // Select the first model by default or a previously saved one
+            const savedModelPath = localStorage.getItem('whisperlite_selected_model');
+            if (savedModelPath && models.some(m => m.path === savedModelPath)) {
+                modelSelect.value = savedModelPath;
+            } else if (models.length > 0) {
+                modelSelect.value = models[0].path;
+                localStorage.setItem('whisperlite_selected_model', models[0].path);
+            }
+        }
     } catch (error) {
-        console.error('Failed to initialize window:', error);
+        console.error('Failed to load models:', error);
+        modelSelect.innerHTML = '<option value="">Error loading models</option>';
+    } finally {
+        modelSelect.disabled = false;
+        refreshModelsBtn.disabled = false;
+        updateModelActionButtons();
     }
 }
 
-// Browse for Whisper model file
-async function browseForModel() {
+function updateModelActionButtons() {
+    const selectedModelPath = modelSelect.value;
+    const isLocalModel = selectedModelPath && !selectedModelPath.startsWith('http'); // Simple check for local vs remote
+    downloadModelBtn.disabled = isLocalModel || !selectedModelPath;
+    deleteModelBtn.disabled = !isLocalModel || !selectedModelPath;
+}
+
+async function downloadModel() {
+    const modelPath = modelSelect.value;
+    if (!modelPath) return;
+
     try {
-        const selected = await open({
-            multiple: false,
-            filters: [{
-                name: 'Whisper Model',
-                extensions: ['bin']
-            }]
-        });
-        if (selected) {
-            modelPathInput.value = selected;
-            localStorage.setItem('whisperlite_model_path', selected);
+        downloadModelBtn.disabled = true;
+        modelProgressDiv.style.display = 'block';
+        updateStatus('processing', 'Downloading...');
+
+        // Placeholder for actual download logic
+        // In a real scenario, you'd listen to progress events from Rust
+        const result = await invoke('download_model', { modelUrl: modelPath });
+
+        if (result.success) {
+            updateStatus('success', 'Download Complete');
+            console.log('Model downloaded to:', result.path);
+            localStorage.setItem('whisperlite_selected_model', result.path);
+            await loadModels(); // Refresh list to show new local model
+        } else {
+            throw new Error(result.error || 'Failed to download model');
         }
     } catch (error) {
-        console.error('Failed to open file dialog:', error);
+        console.error('Download failed:', error);
+        updateStatus('ready', 'Download Failed');
+        showError('Model download failed: ' + error.message);
+    } finally {
+        downloadModelBtn.disabled = false;
+        modelProgressDiv.style.display = 'none';
+        downloadProgress.value = 0;
+        progressText.textContent = '0%';
+        updateModelActionButtons();
     }
 }
+
+async function deleteModel() {
+    const modelPath = modelSelect.value;
+    if (!modelPath) return;
+
+    if (!confirm(`Are you sure you want to delete ${modelSelect.options[modelSelect.selectedIndex].textContent}?`)) {
+        return;
+    }
+
+    try {
+        deleteModelBtn.disabled = true;
+        updateStatus('processing', 'Deleting...');
+
+        const result = await invoke('delete_model', { modelPath: modelPath });
+
+        if (result.success) {
+            updateStatus('success', 'Model Deleted');
+            console.log('Model deleted:', modelPath);
+            localStorage.removeItem('whisperlite_selected_model');
+            await loadModels(); // Refresh list
+        } else {
+            throw new Error(result.error || 'Failed to delete model');
+        }
+    } catch (error) {
+        console.error('Delete failed:', error);
+        updateStatus('ready', 'Delete Failed');
+        showError('Model deletion failed: ' + error.message);
+    } finally {
+        deleteModelBtn.disabled = false;
+        updateModelActionButtons();
+    }
+}
+
+function selectModel() {
+    const selectedModelPath = modelSelect.value;
+    localStorage.setItem('whisperlite_selected_model', selectedModelPath);
+    updateModelActionButtons();
+    console.log('Selected model:', selectedModelPath);
+}
+
+// Placeholder for Tauri commands (will be implemented in Rust)
+// async function list_models() { /* ... */ }
+// async function download_model(modelUrl) { /* ... */ }
+// async function delete_model(modelPath) { /* ... */ }
 
 // Start recording and transcription
 async function startRecording() {
     try {
-        const modelPath = modelPathInput.value.trim();
+        const modelPath = modelSelect.value.trim();
         if (!modelPath) {
             showError('Please select a Whisper model file.');
             return;
