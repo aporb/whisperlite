@@ -1,6 +1,11 @@
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+
 import pytest
 from unittest.mock import patch, mock_open
-from src.output_writer import save_transcript
+from output_writer import save_transcript
 from datetime import datetime
 import json
 import os
